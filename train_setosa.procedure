@@ -1,0 +1,80 @@
+CREATE PROCEDURE train_setosa(
+		IN iter INTEGER,
+		IN etha FLOAT,
+		IN tol FLOAT
+	)
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER
+	AS 
+BEGIN
+
+	DECLARE CURSOR train FOR
+		SELECT * FROM JC.TRAIN_SETOSA;
+		
+	DECLARE des INTEGER;
+	DECLARE resp INTEGER;
+	DECLARE err FLOAT;
+	DECLARE dd FLOAT;
+	
+	DECLARE w1 DECIMAL(4,1);
+	DECLARE w2 DECIMAL(4,1);
+	DECLARE w3 DECIMAL(4,1);
+	DECLARE w4 DECIMAL(4,1);
+	DECLARE b DECIMAL(4,1);
+	
+	DECLARE ww1 DECIMAL(4,1);
+	DECLARE ww2 DECIMAL(4,1);
+	DECLARE ww3 DECIMAL(4,1);
+	DECLARE ww4 DECIMAL(4,1);
+	DECLARE bb DECIMAL(4,1);
+	
+	DECLARE p INTEGER;
+	
+	SELECT (2*RAND()-1) INTO w1 FROM DUMMY;
+	SELECT (2*RAND()-1) INTO w2 FROM DUMMY;
+	SELECT (2*RAND()-1) INTO w3 FROM DUMMY;
+	SELECT (2*RAND()-1) INTO w4 FROM DUMMY;
+	SELECT (2*RAND()-1) INTO b FROM DUMMY;
+	
+	FOR p IN 1 .. :iter DO
+		FOR t AS train DO
+
+			des := t.D;			
+			resp := (t.X1*w1) + (t.X2*w2) + (t.X3*w3) + (t.X4*w4);
+			
+			IF resp > b THEN
+				resp := 1;
+			ELSE
+				resp := 0;
+			END IF;
+			
+			err := (des - resp);
+			
+			b := b - err;
+			w1 := w1 + (:etha*err*t.X1);
+			w2 := w2 + (:etha*err*t.X2);
+			w3 := w3 + (:etha*err*t.X3);
+			w4 := w4 + (:etha*err*t.X4);
+			
+		END FOR;
+		
+		SELECT "W1", "W2", "W3", "W4", "B" INTO ww1, ww2, ww3, ww4, bb FROM JC.PARAM_SETOSA;
+		
+		ww1 := POWER (ww1 - w1, 2);
+		ww2 := POWER (ww2 - w2, 2);
+		ww3 := POWER (ww3 - w3, 2);
+		ww4 := POWER (ww4 - w4, 2);
+		bb := POWER (bb - b, 2);
+		
+		dd := 	POWER((ww1 + ww2 + ww3 + ww4 + bb), 0.5);
+		
+		INSERT INTO JC.W_SETOSA VALUES(:w1, :w2, :w3, :w4, :b);
+		UPSERT JC.PARAM_SETOSA VALUES(:w1, :w2, :w3, :w4, :b);
+		
+		IF dd < :tol THEN
+			BREAK;
+		END IF;
+		
+	END FOR;
+
+END;

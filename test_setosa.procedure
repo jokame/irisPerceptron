@@ -1,0 +1,31 @@
+CREATE PROCEDURE test_setosa (
+		IN X1 FLOAT,
+		IN X2 FLOAT,
+		IN X3 FLOAT,
+		IN X4 FLOAT,
+		OUT C INTEGER
+	) 
+	LANGUAGE SQLSCRIPT
+	SQL SECURITY INVOKER 
+	READS SQL DATA AS
+BEGIN
+
+	DECLARE w1 FLOAT;
+	DECLARE w2 FLOAT;
+	DECLARE w3 FLOAT;
+	DECLARE w4 FLOAT;
+	DECLARE b FLOAT;
+	
+	DECLARE resp FLOAT;
+	
+	SELECT "W1", "W2", "W3", "W4", "B" INTO w1, w2, w3, w4, b FROM JC.PARAM_SETOSA;
+	
+	resp := (w1*:x1) + (w2*:x2) + (w3*:x3) + (w4*:x4);
+	
+	IF resp > b THEN
+		c := 1;
+	ELSE
+		c := 0;
+	END IF;
+
+END;
