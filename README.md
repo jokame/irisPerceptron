@@ -1,4 +1,5 @@
 irisPerceptron
 ==============
 
-Perceptron for the Iris Data Set
+A Simple Perceptron implementation in HANA for the Iris Data Set.
+
